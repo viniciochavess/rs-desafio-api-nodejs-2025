@@ -1,0 +1,19 @@
+
+
+### Get all courses
+GET http://localhost:3333/courses
+
+### Get course by ID
+GET http://localhost:3333/courses/1
+
+### Create a new course
+POST http://localhost:3333/courses
+Content-Type: application/json
+
+{
+  "title": "Curso 4",
+  "description": "Descrição do Curso 4"
+}
+
+### Get course by ID
+GET http://localhost:3333/courses/74698a79-2b88-49cb-973f-f1d42306b09e
