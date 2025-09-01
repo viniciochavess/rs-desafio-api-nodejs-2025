@@ -1,50 +1,52 @@
 import fastify from "fastify";
-import { randomUUID } from "node:crypto";
+
+import {
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from "fastify-type-provider-zod";
+import fastifySwagger from "@fastify/swagger";
+import fastifySwaggerUi from "@fastify/swagger-ui";
+import { getCoursesRoute } from "./routes/get-courses";
+import { getCourseById } from "./routes/get-course-by-id";
+import { createCourseRoute } from "./routes/create-course";
+import scalaApiReference from "@scalar/fastify-api-reference";
+import { env } from "./env";
 const app = fastify({
   logger: {
-      transport: {
-      target: 'pino-pretty',
+    transport: {
+      target: "pino-pretty",
       options: {
-        translateTime: 'HH:MM:ss Z',
-        ignore: 'pid,hostname',
+        translateTime: "HH:MM:ss Z",
+        ignore: "pid,hostname",
       },
     },
   },
-  
-});
+}).withTypeProvider<ZodTypeProvider>();
 
-let courses = [
-  { id: "1", title: "Curso 1", description: "Descrição do Curso 1" },
-  { id: "2", title: "Curso 2", description: "Descrição do Curso 2" },
-  { id: "3", title: "Curso 3", description: "Descrição do Curso 3" },
-];
+app.setSerializerCompiler(serializerCompiler);
+app.setValidatorCompiler(validatorCompiler);
 
-app.get("/courses/:id", async (request, reply) => {
-  type Params = {
-    id: string;
-  };
-  const { id } = request.params as Params;
-  console.log(`Buscando curso com ID: ${id}`);
-  const course = courses.find((c) => c.id == id);
-  if (!course) {
-    return reply.status(404).send({ message: "Curso não encontrado" });
-  }
-  return course;
-});
+if (env.NODE_ENV === "development") {
+  app.register(fastifySwagger, {
+    openapi: {
+      info: {
+        version: "1.0.0",
+        title: "API de Cursos",
+        description: "API para gerenciamento de cursos",
+      },
+    },
+    transform: jsonSchemaTransform,
+  });
 
-app.get("/courses", async (request, reply) => {
-  return courses;
-});
+  app.register(scalaApiReference, {
+    routePrefix: "/docs",
+  });
+}
 
-app.post("/courses", async (request, reply) => {
-  type CreateCourseBody = {
-    title: string;
-    description: string;
-  };
-  const { description, title } = request.body as CreateCourseBody;
-  const id = randomUUID();
-  courses.push({ id, title, description });
-  return reply.status(201).send({ id });
-});
+app.register(getCoursesRoute);
+app.register(getCourseById);
+app.register(createCourseRoute);
 
 export default app;

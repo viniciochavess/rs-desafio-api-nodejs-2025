@@ -11,7 +11,7 @@ POST http://localhost:3333/courses
 Content-Type: application/json
 
 {
-  "title": "Curso 4",
+  "title": "Curso de React",
   "description": "Descrição do Curso 4"
 }
 
